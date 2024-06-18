@@ -1,6 +1,7 @@
 package luau
 
 import "core:fmt"
+import "core:log"
 import "core:strconv"
 import "core:strings"
 import "core:unicode"
@@ -38,6 +39,19 @@ to_keyword :: proc(s: string) -> Maybe(Keyword) {
 		return .Do
 	} else if s == "for" {
 		return .For
+	}
+
+	return nil
+}
+
+@(private)
+to_bool :: proc(s: string) -> Maybe(bool) {
+	if s == "true" {
+		return true
+	}
+
+	if s == "false" {
+		return false
 	}
 
 	return nil
@@ -119,6 +133,8 @@ take_until :: proc(l: ^Lexer, until: string) -> string {
 		s := peak_width(l, width)
 		if s == until {
 			found = true
+			l.pos += width
+			break
 		} else {
 			strings.write_rune(&b, rune(s[0]))
 		}
@@ -167,7 +183,9 @@ build_num :: proc(l: ^Lexer) -> f64 {
 	return f
 }
 
-
+// note for future tom
+// could add the builder to the lexer, rather than creating many
+// currently, deleting a builder results in the underlying buffer being freed, which results in the strings its created being corrupted
 @(private)
 scan :: proc(l: ^Lexer) -> Maybe(Tok) {
 	next_rune := peak(l)
@@ -180,6 +198,10 @@ scan :: proc(l: ^Lexer) -> Maybe(Tok) {
 		if ok {
 			return Tok{kind = .Keyword, data = keyword}
 		} else {
+			b, ok := to_bool(ident).?
+			if ok {
+				return Tok{kind = .Bool, data = b}
+			}
 			return Tok{kind = .Ident, data = ident}
 		}
 	} else if next_rune == '-' && peak_width(l, 2) == "--" {
@@ -198,6 +220,7 @@ scan :: proc(l: ^Lexer) -> Maybe(Tok) {
 		return Tok{kind = .Equal, data = nil}
 	}
 
+	log.errorf("rune did not match anything %c", next_rune)
 	return nil
 }
 
