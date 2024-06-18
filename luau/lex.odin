@@ -120,14 +120,15 @@ peak_width :: proc(l: ^Lexer, width: int) -> string {
 }
 
 @(private)
-take_until :: proc(l: ^Lexer, until: string) -> string {
+take_until :: proc(l: ^Lexer, until: string) -> Maybe(string) {
 	b := strings.builder_make()
 	defer strings.builder_destroy(&b)
 	width := len(until)
 	found := false
 	for !found {
 		if len(l.src) - l.pos < width {
-			panic("cannot take anymore")
+			// panic("cannot take anymore")
+			return nil
 		}
 
 		s := peak_width(l, width)
@@ -183,11 +184,21 @@ build_num :: proc(l: ^Lexer) -> f64 {
 	return f
 }
 
+Error :: enum {
+	EOF,
+	Unrecognized,
+}
+
+Result :: union($T: typeid) #no_nil {
+	T,
+	Error,
+}
+
 // note for future tom
 // could add the builder to the lexer, rather than creating many
 // currently, deleting a builder results in the underlying buffer being freed, which results in the strings its created being corrupted
 @(private)
-scan :: proc(l: ^Lexer) -> Maybe(Tok) {
+scan :: proc(l: ^Lexer) -> Result(Tok) {
 	next_rune := peak(l)
 	if next_rune in WHITESPACE {
 		advance(l, 1)
@@ -206,10 +217,15 @@ scan :: proc(l: ^Lexer) -> Maybe(Tok) {
 		}
 	} else if next_rune == '-' && peak_width(l, 2) == "--" {
 		advance(l, 2)
+		s: Maybe(string)
 		if peak_width(l, 2) == "[[" {
-			_ = take_until(l, "]]")
+			s = take_until(l, "]]")
 		} else {
-			_ = take_until(l, "\n")
+			s = take_until(l, "\n")
+		}
+		fmt.println(s)
+		if s == nil {
+			return .EOF
 		}
 		return scan(l)
 	} else if is_number(next_rune) {
@@ -220,8 +236,15 @@ scan :: proc(l: ^Lexer) -> Maybe(Tok) {
 		return Tok{kind = .Equal, data = nil}
 	}
 
+	fmt.eprintln(
+		"rune did not match anything:",
+		next_rune,
+		" next width: ",
+		peak_width(l, 2),
+		l.pos,
+	)
 	log.errorf("rune did not match anything %c", next_rune)
-	return nil
+	return .Unrecognized
 }
 
 lex :: proc(s: string) -> [dynamic]Tok {
@@ -230,11 +253,16 @@ lex :: proc(s: string) -> [dynamic]Tok {
 	tok_stream: [dynamic]Tok
 	defer delete(tok_stream)
 	for len(l.src) > l.pos {
-		tok, ok := scan(&l).?
+		result := scan(&l)
+		tok, ok := result.(Tok)
 		if ok {
 			append(&tok_stream, tok)
 		} else {
-			panic("a lexing error occured")
+			err, _ := result.(Error)
+			if err != .EOF {
+				log.error(err)
+				panic("a lexing error occured")
+			}
 		}
 	}
 	return tok_stream

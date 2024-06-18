@@ -48,7 +48,7 @@ test_num_assign_lex :: proc(t: ^testing.T) {
 
 @(test)
 test_decent_syntax_lex :: proc(t: ^testing.T) {
-	str := "-- stylua: ignore start\nlocal x = 5\n\nlocal y = --[[comment]] 1\nlocal another = true"
+	str := "-- stylua: ignore start\nlocal x = 5\n\nlocal y = --[[comment]] 1\nlocal another = true\n-- stylua: ignore end"
 	toks := lex(str)
 	testing.expect_value(t, toks[0], tok_make(.Keyword, .Local))
 	testing.expect_value(t, toks[1], tok_make(.Ident, "x"))
