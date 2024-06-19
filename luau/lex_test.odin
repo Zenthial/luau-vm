@@ -63,3 +63,60 @@ test_decent_syntax_lex :: proc(t: ^testing.T) {
 	testing.expect_value(t, toks[10], tok_make(.Equal, nil))
 	testing.expect_value(t, toks[11], tok_make(.Bool, true))
 }
+
+@(test)
+test_function_def_lex :: proc(t: ^testing.T) {
+	str := "function test() end"
+	toks := lex(str)
+	testing.expect_value(t, toks[0], tok_make(.Keyword, .Function))
+	testing.expect_value(t, toks[1], tok_make(.Ident, "test"))
+	testing.expect_value(t, toks[2], tok_make(.Paren, .Left))
+	testing.expect_value(t, toks[3], tok_make(.Paren, .Right))
+	testing.expect_value(t, toks[4], tok_make(.Keyword, .End))
+}
+
+@(test)
+test_array_lex :: proc(t: ^testing.T) {
+	str := "[1, 2, 3]"
+	toks := lex(str)
+	testing.expect_value(t, toks[0], tok_make(.Bracket, .Left))
+	testing.expect_value(t, toks[1], tok_make(.Number, 1))
+	testing.expect_value(t, toks[2], tok_make(.Comma, nil))
+	testing.expect_value(t, toks[3], tok_make(.Number, 2))
+	testing.expect_value(t, toks[4], tok_make(.Comma, nil))
+	testing.expect_value(t, toks[5], tok_make(.Number, 3))
+	testing.expect_value(t, toks[6], tok_make(.Bracket, .Right))
+}
+
+@(test)
+test_type_alias :: proc(t: ^testing.T) {
+	str := "type t = number"
+	toks := lex(str)
+	testing.expect_value(t, toks[0], tok_make(.Keyword, .Type))
+	testing.expect_value(t, toks[1], tok_make(.Ident, "t"))
+	testing.expect_value(t, toks[2], tok_make(.Equal, nil))
+	testing.expect_value(t, toks[3], tok_make(.Ident, "number"))
+}
+
+@(test)
+test_real_type_definition :: proc(t: ^testing.T) {
+	str := "export type character = Model & {\nHumanoid: Humanoid & { Animator: Animator }\n}"
+	toks := lex(str)
+	testing.expect_value(t, toks[0], tok_make(.Keyword, .Export))
+	testing.expect_value(t, toks[1], tok_make(.Keyword, .Type))
+	testing.expect_value(t, toks[2], tok_make(.Ident, "character"))
+	testing.expect_value(t, toks[3], tok_make(.Equal, nil))
+	testing.expect_value(t, toks[4], tok_make(.Ident, "Model"))
+	testing.expect_value(t, toks[5], tok_make(.Ampersand, nil))
+	testing.expect_value(t, toks[6], tok_make(.Brace, .Left))
+	testing.expect_value(t, toks[7], tok_make(.Ident, "Humanoid"))
+	testing.expect_value(t, toks[8], tok_make(.Colon, nil))
+	testing.expect_value(t, toks[9], tok_make(.Ident, "Humanoid"))
+	testing.expect_value(t, toks[10], tok_make(.Ampersand, nil))
+	testing.expect_value(t, toks[11], tok_make(.Brace, .Left))
+	testing.expect_value(t, toks[12], tok_make(.Ident, "Animator"))
+	testing.expect_value(t, toks[13], tok_make(.Colon, nil))
+	testing.expect_value(t, toks[14], tok_make(.Ident, "Animator"))
+	testing.expect_value(t, toks[15], tok_make(.Brace, .Right))
+	testing.expect_value(t, toks[16], tok_make(.Brace, .Right))
+}

@@ -9,7 +9,7 @@ get_file_content :: proc(file_path: string) -> string {
 	if !ok {
 		panic("could not read file")
 	}
-	defer delete(data, context.allocator)
+	// defer delete(data, context.allocator)
 
 	it := string(data)
 	return strings.clone(it)

@@ -19,6 +19,10 @@ Keyword :: enum {
 	While,
 	Do,
 	For,
+	And,
+	Or,
+	Type,
+	Export,
 }
 
 @(private)
@@ -39,6 +43,14 @@ to_keyword :: proc(s: string) -> Maybe(Keyword) {
 		return .Do
 	} else if s == "for" {
 		return .For
+	} else if s == "and" {
+		return .And
+	} else if s == "or" {
+		return .Or
+	} else if s == "type" {
+		return .Type
+	} else if s == "export" {
+		return .Export
 	}
 
 	return nil
@@ -63,6 +75,18 @@ Kind :: enum {
 	Equal,
 	Number,
 	Bool,
+	Paren,
+	Brace,
+	Bracket,
+	Comma,
+	Colon,
+	Ampersand,
+	Pipe,
+}
+
+Side :: enum {
+	Left,
+	Right,
 }
 
 Data :: union {
@@ -70,6 +94,7 @@ Data :: union {
 	Keyword,
 	f64,
 	bool,
+	Side,
 }
 
 Tok :: struct {
@@ -223,7 +248,6 @@ scan :: proc(l: ^Lexer) -> Result(Tok) {
 		} else {
 			s = take_until(l, "\n")
 		}
-		fmt.println(s)
 		if s == nil {
 			return .EOF
 		}
@@ -234,6 +258,36 @@ scan :: proc(l: ^Lexer) -> Result(Tok) {
 	} else if next_rune == '=' {
 		advance(l, 1)
 		return Tok{kind = .Equal, data = nil}
+	} else if next_rune == '(' {
+		advance(l, 1)
+		return Tok{kind = .Paren, data = .Left}
+	} else if next_rune == ')' {
+		advance(l, 1)
+		return Tok{kind = .Paren, data = .Right}
+	} else if next_rune == '{' {
+		advance(l, 1)
+		return Tok{kind = .Brace, data = .Left}
+	} else if next_rune == '}' {
+		advance(l, 1)
+		return Tok{kind = .Brace, data = .Right}
+	} else if next_rune == '[' {
+		advance(l, 1)
+		return Tok{kind = .Bracket, data = .Left}
+	} else if next_rune == ']' {
+		advance(l, 1)
+		return Tok{kind = .Bracket, data = .Right}
+	} else if next_rune == ',' {
+		advance(l, 1)
+		return Tok{kind = .Comma, data = nil}
+	} else if next_rune == ':' {
+		advance(l, 1)
+		return Tok{kind = .Colon, data = nil}
+	} else if next_rune == '&' {
+		advance(l, 1)
+		return Tok{kind = .Ampersand, data = nil}
+	} else if next_rune == '|' {
+		advance(l, 1)
+		return Tok{kind = .Pipe, data = nil}
 	}
 
 	fmt.eprintln(
@@ -251,7 +305,7 @@ lex :: proc(s: string) -> [dynamic]Tok {
 	trimmed := strings.trim_space(s)
 	l := lexer_make(trimmed)
 	tok_stream: [dynamic]Tok
-	defer delete(tok_stream)
+	// defer delete(tok_stream)
 	for len(l.src) > l.pos {
 		result := scan(&l)
 		tok, ok := result.(Tok)
