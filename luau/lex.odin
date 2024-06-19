@@ -21,6 +21,8 @@ Keyword :: enum {
 	For,
 	And,
 	Or,
+	Return,
+	// luau specific
 	Type,
 	Export,
 }
@@ -47,6 +49,8 @@ to_keyword :: proc(s: string) -> Maybe(Keyword) {
 		return .And
 	} else if s == "or" {
 		return .Or
+	} else if s == "return" {
+		return .Return
 	} else if s == "type" {
 		return .Type
 	} else if s == "export" {
@@ -72,16 +76,21 @@ to_bool :: proc(s: string) -> Maybe(bool) {
 Kind :: enum {
 	Ident,
 	Keyword,
+	String,
 	Equal,
 	Number,
 	Bool,
 	Paren,
 	Brace,
 	Bracket,
+	Crocodile,
 	Comma,
+	Tilda, // not
+	QuestionMark,
 	Colon,
 	Ampersand,
 	Pipe,
+	Arrow, // used in return type definitions
 }
 
 Side :: enum {
@@ -136,7 +145,6 @@ peak :: proc(l: ^Lexer) -> rune {
 @(private)
 peak_width :: proc(l: ^Lexer, width: int) -> string {
 	b := strings.builder_make()
-	defer strings.builder_destroy(&b)
 	for i := 0; i < width; i += 1 {
 		strings.write_rune(&b, rune(l.src[l.pos + i]))
 	}
@@ -252,6 +260,16 @@ scan :: proc(l: ^Lexer) -> Result(Tok) {
 			return .EOF
 		}
 		return scan(l)
+	} else if next_rune == '-' && peak_width(l, 2) == "->" {
+		advance(l, 2)
+		return Tok{kind = .Arrow, data = nil}
+	} else if next_rune == '"' {
+		s, ok := take_until(l, "\"").?
+		if !ok {
+			return .EOF
+		}
+
+		return Tok{kind = .String, data = s}
 	} else if is_number(next_rune) {
 		num := build_num(l)
 		return Tok{kind = .Number, data = num}
@@ -276,9 +294,21 @@ scan :: proc(l: ^Lexer) -> Result(Tok) {
 	} else if next_rune == ']' {
 		advance(l, 1)
 		return Tok{kind = .Bracket, data = .Right}
+	} else if next_rune == '<' {
+		advance(l, 1)
+		return Tok{kind = .Crocodile, data = .Left}
+	} else if next_rune == '>' {
+		advance(l, 1)
+		return Tok{kind = .Crocodile, data = .Right}
 	} else if next_rune == ',' {
 		advance(l, 1)
 		return Tok{kind = .Comma, data = nil}
+	} else if next_rune == '?' {
+		advance(l, 1)
+		return Tok{kind = .QuestionMark, data = nil}
+	} else if next_rune == '~' {
+		advance(l, 1)
+		return Tok{kind = .Tilda, data = nil}
 	} else if next_rune == ':' {
 		advance(l, 1)
 		return Tok{kind = .Colon, data = nil}
@@ -297,7 +327,7 @@ scan :: proc(l: ^Lexer) -> Result(Tok) {
 		peak_width(l, 2),
 		l.pos,
 	)
-	log.errorf("rune did not match anything %c", next_rune)
+	log.errorf("rune did not match anything %c\n%s", next_rune)
 	return .Unrecognized
 }
 
