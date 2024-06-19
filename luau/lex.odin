@@ -152,7 +152,7 @@ peak_width :: proc(l: ^Lexer, width: int) -> string {
 	return strings.to_string(b)
 }
 
-@(private)
+@(private = "file")
 take_until :: proc(l: ^Lexer, until: string) -> Maybe(string) {
 	b := strings.builder_make()
 	defer strings.builder_destroy(&b)
@@ -215,16 +215,6 @@ build_num :: proc(l: ^Lexer) -> f64 {
 	num_str := strings.to_string(num)
 	f := strconv.atof(num_str)
 	return f
-}
-
-Error :: enum {
-	EOF,
-	Unrecognized,
-}
-
-Result :: union($T: typeid) #no_nil {
-	T,
-	Error,
 }
 
 // note for future tom

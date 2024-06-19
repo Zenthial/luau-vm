@@ -3,15 +3,15 @@ package luau
 import "core:fmt"
 import "core:testing"
 
-@(test)
-test_take_until :: proc(t: ^testing.T) {
-	str := "123123123\"123123"
-	l := lexer_make(str)
-
-	took := take_until(&l, "\"1")
-	testing.expect_value(t, took, "123123123")
-	testing.expect_value(t, l.pos, 11)
-}
+// @(test)
+// test_take_until :: proc(t: ^testing.T) {
+// 	str := "123123123\"123123"
+// 	l := lexer_make(str)
+//
+// 	took := take_until(&l, "\"1")
+// 	testing.expect_value(t, took, "123123123")
+// 	testing.expect_value(t, l.pos, 11)
+// }
 
 @(test)
 test_simple_ident_lex :: proc(t: ^testing.T) {

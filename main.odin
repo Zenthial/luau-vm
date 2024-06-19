@@ -12,6 +12,6 @@ main :: proc() {
 
 	lua_file := args[1]
 	fmt.println(lua_file)
-	toks := luau.parse(lua_file)
-	fmt.println(toks)
+	ast := luau.file_to_ast(lua_file)
+	fmt.println(ast)
 }
