@@ -26,11 +26,12 @@ get_file_content :: proc(file_path: string) -> string {
 }
 
 
-file_to_ast :: proc(file_path: string, dump_toks: bool) -> [dynamic]Ast {
+file_to_ast :: proc(file_path: string, just_lex: bool) -> [dynamic]Ast {
 	content := get_file_content(file_path)
 	tok_stream := lex(content)
-	if dump_toks {
+	if just_lex {
 		fmt.println(tok_stream)
+		return nil
 	}
 	ast := parse(&tok_stream)
 	return ast

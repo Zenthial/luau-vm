@@ -10,13 +10,15 @@ main :: proc() {
 		panic("expected file path")
 	}
 
-	dump_toks := false
+	just_lex := false
 	if len(args) == 3 {
-		dump_toks = true
+		if args[2] == "lex" {
+			just_lex = true
+		}
 	}
 
 	lua_file := args[1]
 	fmt.println(lua_file)
-	ast := luau.file_to_ast(lua_file, dump_toks)
+	ast := luau.file_to_ast(lua_file, just_lex)
 	fmt.println(ast)
 }

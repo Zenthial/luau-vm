@@ -156,7 +156,7 @@ peak_width :: proc(l: ^Lexer, width: int) -> string {
 @(private = "file")
 take_until :: proc(l: ^Lexer, until: string) -> Maybe(string) {
 	b := strings.builder_make()
-	defer strings.builder_destroy(&b)
+	// defer strings.builder_destroy(&b)
 	width := len(until)
 	found := false
 	for !found {
