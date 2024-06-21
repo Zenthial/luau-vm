@@ -85,6 +85,7 @@ Kind :: enum {
 	Bracket,
 	Crocodile,
 	Comma,
+	Dot,
 	Tilda, // not
 	QuestionMark,
 	Colon,
@@ -254,15 +255,19 @@ scan :: proc(l: ^Lexer) -> Result(Tok) {
 		advance(l, 2)
 		return Tok{kind = .Arrow, data = nil}
 	} else if next_rune == '"' {
+		advance(l, 1)
 		s, ok := take_until(l, "\"").?
 		if !ok {
 			return .EOF
 		}
 
 		return Tok{kind = .String, data = s}
-	} else if is_number(next_rune) {
+	} else if is_number(next_rune) && next_rune != '.' {
 		num := build_num(l)
 		return Tok{kind = .Number, data = num}
+	} else if next_rune == '.' {
+		advance(l, 1)
+		return Tok{kind = .Dot, data = nil}
 	} else if next_rune == '=' {
 		advance(l, 1)
 		return Tok{kind = .Equal, data = nil}

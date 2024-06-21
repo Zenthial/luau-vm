@@ -1,6 +1,5 @@
 package luau
 
-import "core:fmt"
 import "core:testing"
 
 // @(test)
