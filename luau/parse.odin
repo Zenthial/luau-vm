@@ -2,7 +2,6 @@ package luau
 
 import "core:fmt"
 import "core:log"
-
 Ident :: distinct string
 
 AstValue :: union {
